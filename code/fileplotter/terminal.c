@@ -17,17 +17,15 @@
 
 
 
-
+void terminal_clear() {
+	printf("\e[1;1H\e[2J");
+}
 
 void terminal_init() {
 	printf(TERM_FG_GREEN);
 }
 
-void print_header(const char* s)
-{
-//	printf("\033[30m \033[42m \033[1m %s \033[m\n", s);
-	printf(TERM_FG_BLACK TERM_BG_GREEN TERM_BOLD "%s" TERM_RESET "\n", s);
-}
+
 
 //void print_text(const char* s)
 //{

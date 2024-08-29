@@ -40,6 +40,7 @@ void show_prompt()
 
 int main(void)
 {
+	terminal_clear();
 	terminal_init();
 	
 	show_prompt();
