@@ -25,13 +25,6 @@ void terminal_init() {
 	printf(TERM_FG_GREEN);
 }
 
-
-
-//void print_text(const char* s)
-//{
-//	printf(TERM_FG_GREEN "%s" TERM_RESET "\n", s);
-//}
-
 void terminal_printstr(const char *s)
 {
 	for( size_t i=0; i < strlen(s); ++i) {
