@@ -2,9 +2,12 @@
 
 #include <dirent.h>
 #include <stddef.h>
+#include <string.h>
 
 #include "project_defines.h"
 #include "terminal.h"
+#include "util_strings.h"
+
 
 bool cmd_files(const char *s)
 {
@@ -18,12 +21,15 @@ bool cmd_files(const char *s)
 	if ((dir = opendir (FILES_SUBDIR)) != NULL) {
 
 		while ((ent = readdir (dir)) != NULL) {
-			if (utils_strstartswith(ent->d_name, "..")) {
-				terminal_printstr(ent->d_name+2);
+
+			if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) {
+				continue;
 			}
-			else {
-				terminal_printstr(ent->d_name);
-			}
+
+			terminal_printstr("    ");
+			terminal_printstr(ent->d_name);
+			terminal_printstr("\n");
+
 		}
 		
 		closedir (dir);
@@ -35,3 +41,4 @@ bool cmd_files(const char *s)
 
 	return true;
 }
+

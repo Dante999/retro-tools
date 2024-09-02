@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "config.h"
 #include "project_defines.h"
 #include "cmd_show.h"
 #include "cmd_files.h"
@@ -56,6 +57,7 @@ void show_prompt()
 
 int main(void)
 {
+	config_init();
 	terminal_clear();
 	terminal_init();
 	

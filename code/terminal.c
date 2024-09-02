@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "config.h"
 
 #define TERM_FG_BLACK "\033[30m"
 #define TERM_FG_GREEN "\033[32m"
@@ -13,8 +14,10 @@
 #define TERM_REVERSE_OFF "\033[27m"
 #define TERM_FRAMED "\033[51m"
 
-#define CHAR_DELAY_MSEC 10
 
+
+
+useconds_t g_char_delay_usec = 0;
 
 
 void terminal_clear() {
@@ -22,6 +25,8 @@ void terminal_clear() {
 }
 
 void terminal_init() {
+
+	g_char_delay_usec = config_get()->terminal_print_delay_msec * 1000;
 	printf(TERM_FG_GREEN);
 }
 
@@ -29,7 +34,7 @@ void terminal_printstr(const char *s)
 {
 	for( size_t i=0; i < strlen(s); ++i) {
 		putchar(s[i]);
-		usleep(CHAR_DELAY_MSEC * 1000);
+		usleep(g_char_delay_usec);
 		fflush(stdout);
 	}
 }
