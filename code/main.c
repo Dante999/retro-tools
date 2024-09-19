@@ -8,6 +8,7 @@
 #include "cmd_show.h"
 #include "cmd_files.h"
 #include "cmd_help.h"
+#include "util_strings.h"
 
 typedef bool (*cmd_handler)(const char *s);
 
@@ -57,7 +58,23 @@ void show_prompt()
 
 int main(void)
 {
-	config_init();
+	struct result ret = config_init("resources/retro-os.conf");
+
+	if (!ret.success) {
+		printf("ERROR when loading config file: %s\n", ret.msg);
+		return -1;
+	}
+
+	config_print();
+
+
+	printf("hello: '%s'\n", config_gets("helloo"));
+	printf("my_int_value: '%d'\n", config_geti("my_int_value"));
+
+	return 1;
+
+	// ----------------
+
 	terminal_clear();
 	terminal_init();
 	

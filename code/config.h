@@ -3,14 +3,11 @@
 
 #include <stdint.h>
 
-struct config {
-	uint8_t terminal_print_delay_msec;
-};
+#include "result.h"
 
 
-
-void config_init();
-const struct config *config_get();
-
+struct result config_init(const char *filepath);
+void config_print();
+const char* config_gets(const char *key);
 
 #endif /* CONFIG_H */

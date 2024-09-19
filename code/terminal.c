@@ -17,7 +17,7 @@
 
 
 
-useconds_t g_char_delay_usec = 0;
+useconds_t g_char_delay_usec = 50;
 
 
 void terminal_clear() {
@@ -26,7 +26,7 @@ void terminal_clear() {
 
 void terminal_init() {
 
-	g_char_delay_usec = config_get()->terminal_print_delay_msec * 1000;
+///	g_char_delay_usec = config_get()->terminal_print_delay_msec * 1000;
 	printf(TERM_FG_GREEN);
 }
 
