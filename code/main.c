@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "cmd_files.h"
 #include "cmd_help.h"
@@ -18,7 +19,7 @@ void show_prompt()
 {
 	char input_buffer[255];
 
-	char do_loop = 1;
+	bool do_loop = true;
 
 	while (do_loop) {
 		terminal_printstr("\n\n>");
@@ -42,7 +43,7 @@ void show_prompt()
 		}
 		else {
 			terminal_printstr("anything went wrong?!\n");
-			do_loop = 0;
+			do_loop = false;
 		}
 	}
 }

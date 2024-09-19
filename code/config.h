@@ -7,6 +7,8 @@
 
 struct result config_init(const char *filepath);
 void          config_print();
+
 const char   *config_gets(const char *key);
+int           config_geti(const char *key);
 
 #endif /* CONFIG_H */
