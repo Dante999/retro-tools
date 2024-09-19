@@ -8,32 +8,30 @@
 #include "terminal.h"
 #include "util_strings.h"
 
-
 bool cmd_files(const char *s)
 {
 	if (!utils_strstartswith(s, "files")) {
 		return false;
 	}
 
-	DIR *dir;
+	DIR           *dir;
 	struct dirent *ent;
 
-	if ((dir = opendir (FILES_SUBDIR)) != NULL) {
+	if ((dir = opendir(FILES_SUBDIR)) != NULL) {
 
-		while ((ent = readdir (dir)) != NULL) {
+		while ((ent = readdir(dir)) != NULL) {
 
-			if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) {
+			if (strcmp(ent->d_name, ".") == 0 ||
+			    strcmp(ent->d_name, "..") == 0) {
 				continue;
 			}
 
 			terminal_printstr("    ");
 			terminal_printstr(ent->d_name);
 			terminal_printstr("\n");
-
 		}
-		
-		closedir (dir);
-	
+
+		closedir(dir);
 	}
 	else {
 		terminal_printstr("ERROR: unable to open dir!\n");
@@ -41,4 +39,3 @@ bool cmd_files(const char *s)
 
 	return true;
 }
-
