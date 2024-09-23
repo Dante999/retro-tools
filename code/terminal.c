@@ -1,9 +1,12 @@
+#include "terminal.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "config.h"
+#include "project_defines.h"
 
 #define TERM_FG_BLACK    "\033[30m"
 #define TERM_FG_GREEN    "\033[32m"
@@ -14,7 +17,7 @@
 #define TERM_REVERSE_OFF "\033[27m"
 #define TERM_FRAMED      "\033[51m"
 
-useconds_t g_char_delay_usec = 50;
+useconds_t g_char_delay_usec = 0;
 
 void terminal_clear()
 {
@@ -23,10 +26,8 @@ void terminal_clear()
 
 void terminal_init()
 {
-
-	///	g_char_delay_usec = config_get()->terminal_print_delay_msec *
-	///1000;
-	printf(TERM_FG_GREEN);
+	g_char_delay_usec = config_geti(CFG_TERMINAL_CHAR_PRINT_DELAY_MSEC) * 1000;
+	terminal_printstr(TERM_FG_GREEN);
 }
 
 void terminal_printstr(const char *s)

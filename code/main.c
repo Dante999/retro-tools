@@ -10,6 +10,7 @@
 #include "config.h"
 #include "project_defines.h"
 #include "util_strings.h"
+#include "logger.h"
 
 typedef bool (*cmd_handler)(const char *s);
 
@@ -48,26 +49,48 @@ void show_prompt()
 	}
 }
 
-int main(void)
+
+
+
+
+int main(int argc, char *argv[])
 {
-	struct result ret = config_init("resources/retro-os.conf");
+	char resources_dir[255];
+
+	if ( argc == 2) {
+		strncpy(resources_dir, argv[1], sizeof(resources_dir));
+		log_debug("custom resource dir given: %s\n", resources_dir);
+	}
+	else {
+		strncpy(resources_dir, "./resources" , sizeof(resources_dir));
+	}
+
+	char configfile[255];
+	strncpy(configfile, resources_dir, sizeof(configfile));
+	strncat(configfile, "/retro-os.conf", sizeof(configfile)-1);
+
+
+	struct result ret = config_init(configfile);
 
 	if (!ret.success) {
-		printf("ERROR when loading config file: %s\n", ret.msg);
+		log_error("unable to load config file '%s' : %s\n", configfile, ret.msg);
 		return -1;
 	}
 
-	config_print();
+// -------------------- SDL starts here ----------------------------------------
 
-	printf("hello: '%s'\n", config_gets("helloo"));
-	printf("my_int_value: '%d'\n", config_geti("my_int_value"));
 
-	return 1;
+// -------------------- SDL ends here -----------------------------------------
 
-	// ----------------
 
+
+
+
+
+#if 0
 	terminal_clear();
 	terminal_init();
 
 	show_prompt();
+#endif
 }

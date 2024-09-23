@@ -2,6 +2,7 @@ project(retro-os C)
 
 add_executable(${PROJECT_NAME} 
     main.c
+    logger.c
     terminal.c
     config.c
     result.c
