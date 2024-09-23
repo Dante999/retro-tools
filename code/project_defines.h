@@ -10,7 +10,8 @@
 #define FILES_SUBDIR "files"
 
 #define CFG_TERMINAL_CHAR_PRINT_DELAY_MSEC "terminal_character_print_delay_msec"
-
+#define CFG_TERMINAL_FONT                  "terminal_font"
+#define CFG_TERMINAL_FONT_SIZE             "terminal_font_size"
 
 
 

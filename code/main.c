@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+
 #include "cmd_files.h"
 #include "cmd_help.h"
 #include "cmd_show.h"
@@ -11,6 +12,7 @@
 #include "project_defines.h"
 #include "util_strings.h"
 #include "logger.h"
+#include "screen.h"
 
 typedef bool (*cmd_handler)(const char *s);
 
@@ -50,12 +52,20 @@ void show_prompt()
 }
 
 
+char *create_relative_path(char* dst, size_t maxlen, const char* base_path, const char* filename)
+{
+	strncpy(dst, base_path, maxlen);
+	strncat(dst, "/", maxlen);
+	strncat(dst, filename, maxlen);
 
-
+	return dst;
+}
 
 int main(int argc, char *argv[])
 {
 	char resources_dir[255];
+	char tmp_filepath[512];
+	struct result ret;
 
 	if ( argc == 2) {
 		strncpy(resources_dir, argv[1], sizeof(resources_dir));
@@ -65,22 +75,42 @@ int main(int argc, char *argv[])
 		strncpy(resources_dir, "./resources" , sizeof(resources_dir));
 	}
 
-	char configfile[255];
-	strncpy(configfile, resources_dir, sizeof(configfile));
-	strncat(configfile, "/retro-os.conf", sizeof(configfile)-1);
+	create_relative_path(tmp_filepath, sizeof(tmp_filepath), resources_dir, "retro-os.conf");
 
-
-	struct result ret = config_init(configfile);
-
+	ret = config_init(tmp_filepath);
 	if (!ret.success) {
-		log_error("unable to load config file '%s' : %s\n", configfile, ret.msg);
+		log_error("unable to load config file '%s' : %s\n", tmp_filepath, ret.msg);
 		return -1;
 	}
 
-// -------------------- SDL starts here ----------------------------------------
+	// -------------------- SDL starts here ----------------------------------------
+
+	struct screen screen;
+
+	ret = screen_init(&screen);
+	if (!ret.success) {
+		log_error("unable to init screen: %s\n", ret.msg);
+		return -1;
+	}
+
+	create_relative_path(tmp_filepath, sizeof(tmp_filepath), resources_dir, config_gets(CFG_TERMINAL_FONT));
+
+	ret = screen_load_ttf_font(&screen, tmp_filepath, config_geti(CFG_TERMINAL_FONT_SIZE));
+	if (!ret.success) {
+		log_error("unable to load font: %s\n", ret.msg);
+		return -1;
+	}
+
+	screen_draw_buffer(&screen, "I guess hello?!\nHopefully this is in a newline :)\n");
+
+	SDL_RenderPresent(screen.renderer);
+	SDL_Delay(6000);
 
 
-// -------------------- SDL ends here -----------------------------------------
+	screen_destroy(&screen);
+
+	return 0;
+	// -------------------- SDL ends here -----------------------------------------
 
 
 
