@@ -1,18 +1,18 @@
 #include "terminal.h"
 
+#include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
-
 
 #include "cmd_files.h"
 #include "cmd_help.h"
 #include "cmd_show.h"
 #include "config.h"
-#include "project_defines.h"
-#include "util_strings.h"
 #include "logger.h"
+#include "project_defines.h"
 #include "screen.h"
+#include "util_strings.h"
 
 typedef bool (*cmd_handler)(const char *s);
 
@@ -51,8 +51,8 @@ void show_prompt()
 	}
 }
 
-
-char *create_relative_path(char* dst, size_t maxlen, const char* base_path, const char* filename)
+char *create_relative_path(char *dst, size_t maxlen, const char *base_path,
+                           const char *filename)
 {
 	strncpy(dst, base_path, maxlen);
 	strncat(dst, "/", maxlen);
@@ -61,29 +61,51 @@ char *create_relative_path(char* dst, size_t maxlen, const char* base_path, cons
 	return dst;
 }
 
+static bool g_loop = true;
+
+void signal_handler(int signum)
+{
+	if (signum == SIGINT) {
+		g_loop = false;
+	}
+}
+
+void main_loop(struct screen *screen, struct screenbuffer *buffer)
+{
+	screen_draw_buffer(screen, buffer);
+
+	SDL_RenderPresent(screen->renderer);
+	SDL_Delay(100);
+}
+
 int main(int argc, char *argv[])
 {
-	char resources_dir[255];
-	char tmp_filepath[512];
+	signal(SIGINT, signal_handler);
+
+	char          resources_dir[255];
+	char          tmp_filepath[512];
 	struct result ret;
 
-	if ( argc == 2) {
+	if (argc == 2) {
 		strncpy(resources_dir, argv[1], sizeof(resources_dir));
 		log_debug("custom resource dir given: %s\n", resources_dir);
 	}
 	else {
-		strncpy(resources_dir, "./resources" , sizeof(resources_dir));
+		strncpy(resources_dir, "./resources", sizeof(resources_dir));
 	}
 
-	create_relative_path(tmp_filepath, sizeof(tmp_filepath), resources_dir, "retro-os.conf");
+	create_relative_path(tmp_filepath, sizeof(tmp_filepath), resources_dir,
+	                     "retro-os.conf");
 
 	ret = config_init(tmp_filepath);
 	if (!ret.success) {
-		log_error("unable to load config file '%s' : %s\n", tmp_filepath, ret.msg);
+		log_error("unable to load config file '%s' : %s\n",
+		          tmp_filepath, ret.msg);
 		return -1;
 	}
 
-	// -------------------- SDL starts here ----------------------------------------
+	// -------------------- SDL starts here
+	// ----------------------------------------
 
 	struct screen screen;
 
@@ -93,29 +115,33 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	create_relative_path(tmp_filepath, sizeof(tmp_filepath), resources_dir, config_gets(CFG_TERMINAL_FONT));
+	create_relative_path(tmp_filepath, sizeof(tmp_filepath), resources_dir,
+	                     config_gets(CFG_TERMINAL_FONT));
 
-	ret = screen_load_ttf_font(&screen, tmp_filepath, config_geti(CFG_TERMINAL_FONT_SIZE));
+	ret = screen_load_ttf_font(&screen, tmp_filepath,
+	                           config_geti(CFG_TERMINAL_FONT_SIZE));
 	if (!ret.success) {
 		log_error("unable to load font: %s\n", ret.msg);
 		return -1;
 	}
 
-	screen_draw_buffer(&screen, "I guess hello?!\nHopefully this is in a newline :)\n");
+	struct screenbuffer sbuffer;
+	sbuffer_set(&sbuffer);
+	sbuffer_clear();
 
-	SDL_RenderPresent(screen.renderer);
-	SDL_Delay(6000);
+	sbuffer_append("hello world!\n");
+	sbuffer_append("this should be on the next line?!\n");
 
+	while (g_loop) {
+		main_loop(&screen, &sbuffer);
+	}
 
+	log_info("loop terminated, going to cleanup...\n");
 	screen_destroy(&screen);
 
 	return 0;
-	// -------------------- SDL ends here -----------------------------------------
-
-
-
-
-
+	// -------------------- SDL ends here
+	// -----------------------------------------
 
 #if 0
 	terminal_clear();

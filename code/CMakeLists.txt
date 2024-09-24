@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}
     cmd_files.c
     cmd_help.c
     screen.c
+    screenbuffer.c
 )
 
 

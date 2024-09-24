@@ -1,6 +1,8 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+// clang-format off
+
 #define LOG_LEVEL_TRACE   1
 #define LOG_LEVEL_DEBUG   2
 #define LOG_LEVEL_INFO    3
@@ -15,11 +17,11 @@
 #define LOG_LEVEL_ERROR_TXT   "Error  "
 
 #ifndef LOG_LEVEL
-#define LOG_LEVEL LOG_LEVEL_TRACE
+  #define LOG_LEVEL LOG_LEVEL_TRACE
 #endif
 
 #ifndef ENABLE_LOG_COLORS
-#define ENABLE_LOG_COLORS 1
+  #define ENABLE_LOG_COLORS 1
 #endif
 
 #define MAX_LOG_MSG_LENGTH 255
@@ -32,9 +34,9 @@
 
 
 #if LOG_LEVEL == LOG_LEVEL_NONE
-#define simple_logger( ... )
+  #define simple_logger( ... )
 #else
-void simple_logger( const char* level, const char* location, int line, const char* fmt, ... );
+  void simple_logger( const char* level, const char* location, int line, const char* fmt, ... );
 #endif
 
 /*
@@ -45,33 +47,35 @@ void simple_logger( const char* level, const char* location, int line, const cha
 #define LOG_LOCATION ( strrchr( __FILE__, '/' ) + 1 )
 
 #if LOG_LEVEL > LOG_LEVEL_TRACE
-#define log_trace( ... )
+  #define log_trace( ... )
 #else
-#define log_trace( fmt, ... ) simple_logger( LOG_LEVEL_TRACE_TXT, LOG_LOCATION, __LINE__, fmt, ##__VA_ARGS__ )
+  #define log_trace( fmt, ... ) simple_logger( LOG_LEVEL_TRACE_TXT, LOG_LOCATION, __LINE__, fmt, ##__VA_ARGS__ )
 #endif
 
 #if LOG_LEVEL > LOG_LEVEL_DEBUG
-#define log_debug( ... )
+  #define log_debug( ... )
 #else
-#define log_debug( fmt, ... ) simple_logger( LOG_LEVEL_DEBUG_TXT, LOG_LOCATION, __LINE__, fmt, ##__VA_ARGS__ )
+  #define log_debug( fmt, ... ) simple_logger( LOG_LEVEL_DEBUG_TXT, LOG_LOCATION, __LINE__, fmt, ##__VA_ARGS__ )
 #endif
 
 #if LOG_LEVEL > LOG_LEVEL_INFO
-#define log_info( ... )
+  #define log_info( ... )
 #else
-#define log_info( fmt, ... ) simple_logger( LOG_LEVEL_INFO_TXT, LOG_LOCATION, __LINE__, fmt, ##__VA_ARGS__ )
+  #define log_info( fmt, ... ) simple_logger( LOG_LEVEL_INFO_TXT, LOG_LOCATION, __LINE__, fmt, ##__VA_ARGS__ )
 #endif
 
 #if LOG_LEVEL > LOG_LEVEL_WARNING
-#define log_warning( ... )
+  #define log_warning( ... )
 #else
-#define log_warning( fmt, ... ) simple_logger( LOG_LEVEL_WARNING_TXT, LOG_LOCATION, __LINE__, fmt, ##__VA_ARGS__ )
+  #define log_warning( fmt, ... ) simple_logger( LOG_LEVEL_WARNING_TXT, LOG_LOCATION, __LINE__, fmt, ##__VA_ARGS__ )
 #endif
 
 #if LOG_LEVEL > LOG_LEVEL_ERROR
-#define log_error( ... )
+  #define log_error( ... )
 #else
-#define log_error( fmt, ... ) simple_logger( LOG_LEVEL_ERROR_TXT, LOG_LOCATION, __LINE__, fmt, ##__VA_ARGS__ )
+  #define log_error( fmt, ... ) simple_logger( LOG_LEVEL_ERROR_TXT, LOG_LOCATION, __LINE__, fmt, ##__VA_ARGS__ )
 #endif
+
+// clang-format on
 
 #endif

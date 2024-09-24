@@ -26,7 +26,8 @@ void terminal_clear()
 
 void terminal_init()
 {
-	g_char_delay_usec = config_geti(CFG_TERMINAL_CHAR_PRINT_DELAY_MSEC) * 1000;
+	g_char_delay_usec =
+	    config_geti(CFG_TERMINAL_CHAR_PRINT_DELAY_MSEC) * 1000;
 	terminal_printstr(TERM_FG_GREEN);
 }
 

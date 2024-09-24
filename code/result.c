@@ -14,7 +14,6 @@ struct result create_result_error(int errno_val)
 	return result;
 }
 
-
 struct result create_result_fmt(bool success, const char *fmt, ...)
 {
 	struct result result;
@@ -28,7 +27,6 @@ struct result create_result_fmt(bool success, const char *fmt, ...)
 
 	return result;
 }
-
 
 struct result create_result_success()
 {
