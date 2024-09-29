@@ -1,5 +1,7 @@
 #include "screen.h"
 
+#include <SDL2/SDL_video.h>
+
 #include "logger.h"
 
 static void screen_render_string(SDL_Renderer *renderer, int x, int y,
@@ -20,6 +22,36 @@ static void screen_render_string(SDL_Renderer *renderer, int x, int y,
 	SDL_DestroyTexture(texture);
 }
 
+static struct result screen_load_ttf_font(struct screen *screen)
+{
+	TTF_Init();
+	screen->m_font = TTF_OpenFont(screen->cfg.font_path, 10);
+
+	if (screen->m_font == NULL) {
+		return create_result_fmt(false,
+		                         "could not initialize font %s: %s\n",
+		                         screen->cfg.font_path, TTF_GetError());
+	}
+
+	const int usable_width =
+		screen->cfg.width - (2 * screen->cfg.border_width);
+	const int max_char_width = usable_width / 80;
+
+	int text_w;
+	int text_h;
+
+	TTF_SizeText(screen->m_font, "0", &text_w, &text_h);
+
+	log_info("font with ptsize %d has the dimensions: w=%d h=%d per char\n",
+	         10, text_w, text_h);
+
+	int ptsize = (max_char_width * 10) / text_w;
+
+	TTF_SetFontSize(screen->m_font, ptsize);
+
+	return create_result_success();
+}
+
 struct result screen_init(struct screen *screen)
 {
 
@@ -28,37 +60,33 @@ struct result screen_init(struct screen *screen)
 		    false, "could not initialize sdl2: %s\n", SDL_GetError());
 	}
 
-	screen->window = SDL_CreateWindow("retro-os", SDL_WINDOWPOS_UNDEFINED,
-	                                  SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
-	                                  SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+	screen->m_window = SDL_CreateWindow(
+	    "retro-os", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+	    screen->cfg.width, screen->cfg.height, SDL_WINDOW_SHOWN);
 
-	if (screen->window == NULL) {
+	if (screen->m_window == NULL) {
 		return create_result_fmt(false, "could not create window: %s\n",
 		                         SDL_GetError());
 	}
 
-	screen->screenSurface = SDL_GetWindowSurface(screen->window);
+	if (screen->cfg.fullscreen) {
+		SDL_SetWindowFullscreen(screen->m_window,
+		                        SDL_WINDOW_FULLSCREEN_DESKTOP);
+	}
+
+	screen->m_screenSurface = SDL_GetWindowSurface(screen->m_window);
 
 	// triggers the program that controls
 	// your graphics hardware and sets flags
 	Uint32 render_flags = SDL_RENDERER_ACCELERATED;
 
 	// creates a renderer to render our images
-	screen->renderer = SDL_CreateRenderer(screen->window, -1, render_flags);
+	screen->m_renderer =
+	    SDL_CreateRenderer(screen->m_window, -1, render_flags);
 
-	return create_result_success();
-}
-
-struct result screen_load_ttf_font(struct screen *screen, const char *font_path,
-                                   int font_pt_size)
-{
-	TTF_Init();
-	screen->font = TTF_OpenFont(font_path, font_pt_size);
-
-	if (screen->font == NULL) {
-		return create_result_fmt(false,
-		                         "could not initialize font %s: %s\n",
-		                         font_path, TTF_GetError());
+	struct result result = screen_load_ttf_font(screen);
+	if (!result.success) {
+		return result;
 	}
 
 	return create_result_success();
@@ -66,7 +94,7 @@ struct result screen_load_ttf_font(struct screen *screen, const char *font_path,
 
 void screen_destroy(struct screen *screen)
 {
-	SDL_DestroyWindow(screen->window);
+	SDL_DestroyWindow(screen->m_window);
 	SDL_Quit();
 }
 
@@ -74,7 +102,7 @@ void screen_draw_string(struct screen *screen, const char *s, size_t maxlen)
 {
 	// create a rectangle to update with the size of the rendered text
 	SDL_Rect text_rect;
-	text_rect.y = 10;
+	text_rect.y = screen->cfg.border_width;
 	text_rect.h = 0;
 
 	// The color for the text we will be displaying
@@ -93,8 +121,9 @@ void screen_draw_string(struct screen *screen, const char *s, size_t maxlen)
 			linebuffer[linebuffer_idx] = '\0';
 
 			screen_render_string(
-			    screen->renderer, 10, text_rect.y + text_rect.h,
-			    linebuffer, screen->font, &text_rect, &white);
+			    screen->m_renderer, screen->cfg.border_width,
+			    text_rect.y + text_rect.h, linebuffer,
+			    screen->m_font, &text_rect, &white);
 
 			linebuffer_idx = 0;
 			i++;
@@ -104,9 +133,10 @@ void screen_draw_string(struct screen *screen, const char *s, size_t maxlen)
 	}
 	// so we can have nice text, two lines one above the next
 	//	screen_render_string(screen->renderer, 10, 10, "Hello World!",
-	//screen->font, &text_rect, &white);
+	// screen->font, &text_rect, &white);
 	//	screen_render_string(screen->renderer, 10, text_rect.y +
-	//text_rect.h, "Conan demo by JFrog", screen->font, &text_rect, &white);
+	// text_rect.h, "Conan demo by JFrog", screen->font, &text_rect,
+	// &white);
 }
 
 void screen_draw_buffer(struct screen *screen, struct screenbuffer *buffer)

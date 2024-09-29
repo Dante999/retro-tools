@@ -7,20 +7,22 @@
 #include "result.h"
 #include "screenbuffer.h"
 
-#define SCREEN_WIDTH  1920
-#define SCREEN_HEIGHT 1080
-
 struct screen {
-	SDL_Window   *window;
-	SDL_Surface  *screenSurface;
-	SDL_Renderer *renderer;
-	TTF_Font     *font;
+	struct screen_cfg {
+		int  width;
+		int  height;
+		int  border_width;
+		bool fullscreen;
+		char font_path[255];
+	} cfg;
+
+	SDL_Window   *m_window;
+	SDL_Surface  *m_screenSurface;
+	SDL_Renderer *m_renderer;
+	TTF_Font     *m_font;
 };
 
 struct result screen_init(struct screen *screen);
-
-struct result screen_load_ttf_font(struct screen *screen, const char *font_path,
-                                   int font_pt_size);
 
 void screen_draw_string(struct screen *screen, const char *s, size_t maxlen);
 void screen_draw_buffer(struct screen *screen, struct screenbuffer *buffer);

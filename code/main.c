@@ -52,7 +52,7 @@ void show_prompt()
 }
 
 char *create_relative_path(char *dst, size_t maxlen, const char *base_path,
-                           const char *filename)
+		const char *filename)
 {
 	strncpy(dst, base_path, maxlen);
 	strncat(dst, "/", maxlen);
@@ -74,7 +74,21 @@ void main_loop(struct screen *screen, struct screenbuffer *buffer)
 {
 	screen_draw_buffer(screen, buffer);
 
-	SDL_RenderPresent(screen->renderer);
+	SDL_Event event;
+
+	while (SDL_PollEvent(&event))
+	{
+		switch (event.type)
+		{
+			case SDL_QUIT:
+				g_loop = false;
+				break;
+
+			default:
+				break;
+		}
+	}
+	SDL_RenderPresent(screen->m_renderer);
 	SDL_Delay(100);
 }
 
@@ -95,33 +109,32 @@ int main(int argc, char *argv[])
 	}
 
 	create_relative_path(tmp_filepath, sizeof(tmp_filepath), resources_dir,
-	                     "retro-os.conf");
+			"retro-os.conf");
 
 	ret = config_init(tmp_filepath);
 	if (!ret.success) {
 		log_error("unable to load config file '%s' : %s\n",
-		          tmp_filepath, ret.msg);
+				tmp_filepath, ret.msg);
 		return -1;
 	}
 
 	// -------------------- SDL starts here
 	// ----------------------------------------
 
-	struct screen screen;
+	struct screen screen = {
+		.cfg = {.width        = config_geti(CFG_SCREEN_WIDTH),
+			.height       = config_geti(CFG_SCREEN_HEIGHT),
+			.border_width = 20,
+			.fullscreen =
+				config_geti(CFG_SCREEN_FULLSCREEN) == 1 ? true : false
+
+		}};
+	create_relative_path(screen.cfg.font_path, sizeof(screen.cfg.font_path),
+			resources_dir, config_gets(CFG_TERMINAL_FONT));
 
 	ret = screen_init(&screen);
 	if (!ret.success) {
 		log_error("unable to init screen: %s\n", ret.msg);
-		return -1;
-	}
-
-	create_relative_path(tmp_filepath, sizeof(tmp_filepath), resources_dir,
-	                     config_gets(CFG_TERMINAL_FONT));
-
-	ret = screen_load_ttf_font(&screen, tmp_filepath,
-	                           config_geti(CFG_TERMINAL_FONT_SIZE));
-	if (!ret.success) {
-		log_error("unable to load font: %s\n", ret.msg);
 		return -1;
 	}
 
@@ -131,6 +144,8 @@ int main(int argc, char *argv[])
 
 	sbuffer_append("hello world!\n");
 	sbuffer_append("this should be on the next line?!\n");
+	sbuffer_append("| and this is a text which is exactly 80 columns wide "
+			"to check boundaries of   |\n");
 
 	while (g_loop) {
 		main_loop(&screen, &sbuffer);
