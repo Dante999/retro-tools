@@ -8,6 +8,10 @@ static void screen_render_string(SDL_Renderer *renderer, int x, int y,
                                  const char *text, TTF_Font *font,
                                  SDL_Rect *rect, SDL_Color *color)
 {
+	if (strlen(text) == 0) {
+		return;
+	}
+
 	SDL_Surface *surface;
 	SDL_Texture *texture;
 
@@ -100,43 +104,49 @@ void screen_destroy(struct screen *screen)
 
 void screen_draw_string(struct screen *screen, const char *s, size_t maxlen)
 {
+	if (maxlen == 0) {
+		return;
+	}
+
 	// create a rectangle to update with the size of the rendered text
 	SDL_Rect text_rect;
 	text_rect.y = screen->cfg.border_width;
 	text_rect.h = 0;
 
 	// The color for the text we will be displaying
-	//	SDL_Color white = {255, 255, 255, 0};
-	SDL_Color white = {0, 255, 0, 0};
+	//	SDL_Color font_color = {255, 255, 255, 0};
+	SDL_Color font_color = {0, 255, 0, 0};
 
 	char   linebuffer[255];
 	size_t linebuffer_idx = 0;
 
 	size_t i = 0;
 
-	while (s[i] != '\0' && i < maxlen) {
+	while (s[i] != '\0' && i <= maxlen) {
 
-		if (s[i] == '\n' || linebuffer_idx >= sizeof(linebuffer)) {
+		if (s[i] == '\n' || linebuffer_idx >= sizeof(linebuffer) || i == maxlen ){
 
 			linebuffer[linebuffer_idx] = '\0';
 
 			screen_render_string(
 			    screen->m_renderer, screen->cfg.border_width,
 			    text_rect.y + text_rect.h, linebuffer,
-			    screen->m_font, &text_rect, &white);
+			    screen->m_font, &text_rect, &font_color);
 
 			linebuffer_idx = 0;
 			i++;
 		}
-
-		linebuffer[linebuffer_idx++] = s[i++];
+		else {
+			linebuffer[linebuffer_idx++] = s[i++];
+		}
 	}
-	// so we can have nice text, two lines one above the next
-	//	screen_render_string(screen->renderer, 10, 10, "Hello World!",
-	// screen->font, &text_rect, &white);
-	//	screen_render_string(screen->renderer, 10, text_rect.y +
-	// text_rect.h, "Conan demo by JFrog", screen->font, &text_rect,
-	// &white);
+
+#if 1
+	screen_render_string(
+	    screen->m_renderer, screen->cfg.border_width,
+	    text_rect.y, ">",
+	    screen->m_font, &text_rect, &font_color);
+#endif
 }
 
 void screen_draw_buffer(struct screen *screen, struct screenbuffer *buffer)

@@ -14,6 +14,8 @@
 #include "screen.h"
 #include "util_strings.h"
 
+#include <SDL2/SDL_keycode.h>
+
 typedef bool (*cmd_handler)(const char *s);
 
 cmd_handler handler[3] = {cmd_help, cmd_show, cmd_files};
@@ -84,12 +86,28 @@ void main_loop(struct screen *screen, struct screenbuffer *buffer)
 				g_loop = false;
 				break;
 
+			case SDL_TEXTINPUT:
+				sbuffer_append(event.text.text);
+				break;
+
+			case SDL_KEYDOWN: {
+				SDL_Keysym *key = &event.key.keysym;
+
+				if (key->sym == SDLK_RETURN) {
+					sbuffer_append("\n");
+				}
+				else if (key->sym == SDLK_c && 
+				        (key->mod & KMOD_LCTRL)) {
+						g_loop = false;
+				}
+				break;
+			}
 			default:
 				break;
 		}
 	}
 	SDL_RenderPresent(screen->m_renderer);
-	SDL_Delay(100);
+	SDL_Delay(10);
 }
 
 int main(int argc, char *argv[])
@@ -117,6 +135,7 @@ int main(int argc, char *argv[])
 				tmp_filepath, ret.msg);
 		return -1;
 	}
+	config_print();
 
 	// -------------------- SDL starts here
 	// ----------------------------------------
@@ -146,6 +165,7 @@ int main(int argc, char *argv[])
 	sbuffer_append("this should be on the next line?!\n");
 	sbuffer_append("| and this is a text which is exactly 80 columns wide "
 			"to check boundaries of   |\n");
+	sbuffer_append(">");
 
 	while (g_loop) {
 		main_loop(&screen, &sbuffer);

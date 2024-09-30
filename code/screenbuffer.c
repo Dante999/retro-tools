@@ -11,6 +11,7 @@ static void append_char(char c)
 	g_screenbuffer->data[g_screenbuffer->cursor_pos] = c;
 	g_screenbuffer->cursor_pos++;
 	g_screenbuffer->cursor_pos %= sizeof(g_screenbuffer->data) - 1;
+	g_screenbuffer->data[g_screenbuffer->cursor_pos] = '>';
 }
 
 void sbuffer_set(struct screenbuffer *sb)
@@ -33,5 +34,8 @@ void sbuffer_append(const char *s)
 		append_char(*(s++));
 	}
 
+	
+//	g_screenbuffer->data[g_screenbuffer->cursor_pos+1] = '>';
+//	append_char('>');
 	log_debug("end cursor pos: %zu\n", g_screenbuffer->cursor_pos);
 }
