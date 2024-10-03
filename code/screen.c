@@ -11,16 +11,15 @@ static void screen_render_string(SDL_Renderer *renderer, int x, int y,
 	if (strlen(text) == 0) {
 		return;
 	}
+	
+	SDL_Surface *surface = TTF_RenderText_Solid(font, text, *color);
+	SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
 
-	SDL_Surface *surface;
-	SDL_Texture *texture;
-
-	surface = TTF_RenderText_Solid(font, text, *color);
-	texture = SDL_CreateTextureFromSurface(renderer, surface);
 	rect->x = x;
 	rect->y = y;
 	rect->w = surface->w;
 	rect->h = surface->h;
+
 	SDL_FreeSurface(surface);
 	SDL_RenderCopy(renderer, texture, NULL, rect);
 	SDL_DestroyTexture(texture);
@@ -46,12 +45,13 @@ static struct result screen_load_ttf_font(struct screen *screen)
 
 	TTF_SizeText(screen->m_font, "0", &text_w, &text_h);
 
-	log_info("font with ptsize %d has the dimensions: w=%d h=%d per char\n",
-	         10, text_w, text_h);
-
 	int ptsize = (max_char_width * 10) / text_w;
 
 	TTF_SetFontSize(screen->m_font, ptsize);
+	TTF_SizeText(screen->m_font, "0", &screen->m_font_width, &screen->m_font_height);
+
+	log_info("loaded font with ptsize %d and the dimensions: w=%d h=%d per char\n",
+	         ptsize, screen->m_font_width, screen->m_font_height);
 
 	return create_result_success();
 }
@@ -141,15 +141,83 @@ void screen_draw_string(struct screen *screen, const char *s, size_t maxlen)
 		}
 	}
 
-#if 1
+}
+
+
+static void draw_text_on_line(struct screen *screen, size_t linenum, const char *s)
+{
+	SDL_Rect text_rect;
+	text_rect.y = screen->cfg.border_width + (linenum * screen->m_font_height);
+	text_rect.x = screen->cfg.border_width;
+	text_rect.h = 0;
+
 	screen_render_string(
-	    screen->m_renderer, screen->cfg.border_width,
-	    text_rect.y, ">",
-	    screen->m_font, &text_rect, &font_color);
-#endif
+		screen->m_renderer, 
+		screen->cfg.border_width,
+		text_rect.y + text_rect.h, 
+		s,
+		screen->m_font, 
+		&text_rect, 
+		&screen->cfg.font_color
+	);
+
+}
+
+static void draw_cursor(struct screen *screen, size_t linenum, size_t columnnum)
+{
+	//log_info("drawing cursor on line=%zu col=%zu\n", linenum, columnnum);
+
+	
+	SDL_Rect text_rect;
+	text_rect.x = screen->cfg.border_width + (columnnum * screen->m_font_width);
+	text_rect.y = screen->cfg.border_width + (linenum * screen->m_font_height);
+	text_rect.h = screen->m_font_height;
+	text_rect.w = screen->m_font_width;
+
+	SDL_SetRenderDrawColor(
+			screen->m_renderer,
+			screen->cfg.font_color.r,
+			screen->cfg.font_color.g,
+			screen->cfg.font_color.b,
+			screen->cfg.font_color.a
+	);
+
+	SDL_RenderDrawRect(screen->m_renderer, &text_rect);
+
+	SDL_SetRenderDrawColor(screen->m_renderer, 0, 0, 0, 255);
+
+	SDL_RenderPresent(screen->m_renderer);
+
+	//log_info("render position cursor: x=%d y=%d\n", text_rect.x, text_rect.y);
 }
 
 void screen_draw_buffer(struct screen *screen, struct screenbuffer *buffer)
 {
-	screen_draw_string(screen, buffer->data, buffer->cursor_pos);
+	char linebuffer[255];
+
+	for (size_t i=0; i < SCREENBUFFER_LINES; ++i) {
+	
+		memset(linebuffer, '\0', sizeof(linebuffer));
+
+		for (size_t j=0; j < SCREENBUFFER_ROWS; ++j) {
+
+			char c = buffer->data[i][j];
+
+			if (c == '\n') {
+				linebuffer[j] = '\0';
+				break;
+			}
+			else {
+				linebuffer[j] = c;
+			}
+		}
+
+		draw_text_on_line(screen, i, linebuffer);
+
+		if (buffer->cursor_line == i) {
+			draw_cursor(screen, buffer->cursor_line, buffer->cursor_column);
+			break;
+		}
+	}
+
 }

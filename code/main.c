@@ -12,7 +12,6 @@
 #include "logger.h"
 #include "project_defines.h"
 #include "screen.h"
-#include "util_strings.h"
 
 #include <SDL2/SDL_keycode.h>
 
@@ -74,7 +73,6 @@ void signal_handler(int signum)
 
 void main_loop(struct screen *screen, struct screenbuffer *buffer)
 {
-	screen_draw_buffer(screen, buffer);
 
 	SDL_Event event;
 
@@ -87,14 +85,14 @@ void main_loop(struct screen *screen, struct screenbuffer *buffer)
 				break;
 
 			case SDL_TEXTINPUT:
-				sbuffer_append(event.text.text);
+				screenbuffer_append(event.text.text);
 				break;
 
 			case SDL_KEYDOWN: {
 				SDL_Keysym *key = &event.key.keysym;
 
 				if (key->sym == SDLK_RETURN) {
-					sbuffer_append("\n");
+					screenbuffer_append("\n");
 				}
 				else if (key->sym == SDLK_c && 
 				        (key->mod & KMOD_LCTRL)) {
@@ -106,6 +104,11 @@ void main_loop(struct screen *screen, struct screenbuffer *buffer)
 				break;
 		}
 	}
+	
+
+	SDL_RenderClear(screen->m_renderer);
+	screen_draw_buffer(screen, buffer);
+
 	SDL_RenderPresent(screen->m_renderer);
 	SDL_Delay(10);
 }
@@ -145,7 +148,8 @@ int main(int argc, char *argv[])
 			.height       = config_geti(CFG_SCREEN_HEIGHT),
 			.border_width = 20,
 			.fullscreen =
-				config_geti(CFG_SCREEN_FULLSCREEN) == 1 ? true : false
+				config_geti(CFG_SCREEN_FULLSCREEN) == 1 ? true : false,
+			.font_color = {0, 255, 0}
 
 		}};
 	create_relative_path(screen.cfg.font_path, sizeof(screen.cfg.font_path),
@@ -158,14 +162,13 @@ int main(int argc, char *argv[])
 	}
 
 	struct screenbuffer sbuffer;
-	sbuffer_set(&sbuffer);
-	sbuffer_clear();
+	screenbuffer_set(&sbuffer);
 
-	sbuffer_append("hello world!\n");
-	sbuffer_append("this should be on the next line?!\n");
-	sbuffer_append("| and this is a text which is exactly 80 columns wide "
+	screenbuffer_append("hello world!\n");
+	screenbuffer_append("this should be on the next line?!\n");
+	screenbuffer_append("| and this is a text which is exactly 80 columns wide "
 			"to check boundaries of   |\n");
-	sbuffer_append(">");
+	screenbuffer_append(">");
 
 	while (g_loop) {
 		main_loop(&screen, &sbuffer);

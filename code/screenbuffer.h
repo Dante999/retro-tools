@@ -1,18 +1,22 @@
 #ifndef SCREENBUFFER_H
 #define SCREENBUFFER_H
 
-#define SCREENBUFFER_LINEWIDTH 80
-#define SCREENBUFFER_LINES     120
-
 #include <stddef.h>
 
+
+#define SCREENBUFFER_ROWS 80
+#define SCREENBUFFER_LINES 10
+
+
 struct screenbuffer {
-	char   data[SCREENBUFFER_LINEWIDTH * SCREENBUFFER_LINES];
-	size_t cursor_pos;
+    char data[SCREENBUFFER_LINES][SCREENBUFFER_ROWS];
+    size_t cursor_line;
+    size_t cursor_column;
 };
 
-void sbuffer_set(struct screenbuffer *sb);
-void sbuffer_clear();
-void sbuffer_append(const char *s);
+
+void screenbuffer_set(struct screenbuffer *sb);
+void screenbuffer_append(const char *s);
+void screenbuffer_print();
 
 #endif // SCREENBUFFER_H
