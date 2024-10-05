@@ -3,7 +3,11 @@
 #include <SDL2/SDL_video.h>
 
 #include "logger.h"
+#include "util_defines.h"
 
+
+#define CHARS_PER_LINE 80
+/*
 static void screen_render_string(SDL_Renderer *renderer, int x, int y,
                                  const char *text, TTF_Font *font,
                                  SDL_Rect *rect, SDL_Color *color)
@@ -24,6 +28,7 @@ static void screen_render_string(SDL_Renderer *renderer, int x, int y,
 	SDL_RenderCopy(renderer, texture, NULL, rect);
 	SDL_DestroyTexture(texture);
 }
+*/
 
 static struct result screen_load_ttf_font(struct screen *screen)
 {
@@ -38,7 +43,7 @@ static struct result screen_load_ttf_font(struct screen *screen)
 
 	const int usable_width =
 		screen->cfg.width - (2 * screen->cfg.border_width);
-	const int max_char_width = usable_width / 80;
+	const int max_char_width = usable_width / CHARS_PER_LINE;
 
 	int text_w;
 	int text_h;
@@ -102,6 +107,8 @@ void screen_destroy(struct screen *screen)
 	SDL_Quit();
 }
 
+
+/*
 void screen_draw_string(struct screen *screen, const char *s, size_t maxlen)
 {
 	if (maxlen == 0) {
@@ -142,25 +149,32 @@ void screen_draw_string(struct screen *screen, const char *s, size_t maxlen)
 	}
 
 }
+*/
 
-
-static void draw_text_on_line(struct screen *screen, size_t linenum, const char *s)
+static void draw_text_on_line(struct screen *screen, size_t linenum, const char *text)
 {
+	if ( text  == NULL || strlen(text) == 0) {
+		return;
+	}
+
+	SDL_Surface *tmp_surface = TTF_RenderText_Solid(
+			screen->m_font, 
+			text,
+			screen->cfg.font_color);
+
+	SDL_Texture *texture = SDL_CreateTextureFromSurface(
+			screen->m_renderer, 
+			tmp_surface);
+
 	SDL_Rect text_rect;
-	text_rect.y = screen->cfg.border_width + (linenum * screen->m_font_height);
 	text_rect.x = screen->cfg.border_width;
-	text_rect.h = 0;
+	text_rect.y = screen->cfg.border_width + (linenum * screen->m_font_height);
+	text_rect.w = tmp_surface->w;
+	text_rect.h = tmp_surface->h;
 
-	screen_render_string(
-		screen->m_renderer, 
-		screen->cfg.border_width,
-		text_rect.y + text_rect.h, 
-		s,
-		screen->m_font, 
-		&text_rect, 
-		&screen->cfg.font_color
-	);
-
+	SDL_FreeSurface(tmp_surface);
+	SDL_RenderCopy(screen->m_renderer, texture, NULL, &text_rect);
+	SDL_DestroyTexture(texture);
 }
 
 static void draw_cursor(struct screen *screen, size_t linenum, size_t columnnum)
@@ -193,8 +207,49 @@ static void draw_cursor(struct screen *screen, size_t linenum, size_t columnnum)
 
 void screen_draw_buffer(struct screen *screen, struct screenbuffer *buffer)
 {
-	char linebuffer[255];
+//	char linebuffer[255];
 
+#if 1
+	struct screenview sview;
+	screenbuffer_get_view(&sview);
+
+	int last_line_index = -1;
+
+	for (size_t i=0; i < ARRAY_SIZE(sview.lines); ++i) {
+	
+//		memset(linebuffer, '\0', sizeof(linebuffer));
+
+		if (sview.lines[i] != NULL) {
+			++last_line_index;
+			draw_text_on_line(screen, i, sview.lines[i]);
+			log_info("line: %zu : '%s'\n", i, sview.lines[i]);
+		}
+
+/*
+		for (size_t j=0; j < SCREENBUFFER_ROWS; ++j) {
+
+			char c = *(buffer->sview[i]+j);
+
+			if (c == '\n') {
+				linebuffer[j] = '\0';
+				break;
+			}
+			else {
+				linebuffer[j] = c;
+			}
+		}
+
+
+		if (buffer->cursor_line == i) {
+			draw_cursor(screen, buffer->cursor_line, buffer->cursor_column);
+			break;
+		}
+*/
+	}
+
+	draw_cursor(screen, last_line_index, buffer->cursor_column);
+
+#else 
 	for (size_t i=0; i < SCREENBUFFER_LINES; ++i) {
 	
 		memset(linebuffer, '\0', sizeof(linebuffer));
@@ -219,5 +274,5 @@ void screen_draw_buffer(struct screen *screen, struct screenbuffer *buffer)
 			break;
 		}
 	}
-
+#endif
 }

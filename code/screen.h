@@ -27,7 +27,6 @@ struct screen {
 
 struct result screen_init(struct screen *screen);
 
-void screen_draw_string(struct screen *screen, const char *s, size_t maxlen);
 void screen_draw_buffer(struct screen *screen, struct screenbuffer *buffer);
 void screen_destroy(struct screen *screen);
 

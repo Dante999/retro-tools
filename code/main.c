@@ -11,6 +11,7 @@
 #include "config.h"
 #include "logger.h"
 #include "project_defines.h"
+#include "util_defines.h"
 #include "screen.h"
 
 #include <SDL2/SDL_keycode.h>
@@ -94,6 +95,9 @@ void main_loop(struct screen *screen, struct screenbuffer *buffer)
 				if (key->sym == SDLK_RETURN) {
 					screenbuffer_append("\n");
 				}
+				else if (key->sym == SDLK_BACKSPACE) {
+					screenbuffer_append("\b");
+				}
 				else if (key->sym == SDLK_c && 
 				        (key->mod & KMOD_LCTRL)) {
 						g_loop = false;
@@ -163,12 +167,6 @@ int main(int argc, char *argv[])
 
 	struct screenbuffer sbuffer;
 	screenbuffer_set(&sbuffer);
-
-	screenbuffer_append("hello world!\n");
-	screenbuffer_append("this should be on the next line?!\n");
-	screenbuffer_append("| and this is a text which is exactly 80 columns wide "
-			"to check boundaries of   |\n");
-	screenbuffer_append(">");
 
 	while (g_loop) {
 		main_loop(&screen, &sbuffer);
